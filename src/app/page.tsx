@@ -34,7 +34,7 @@ const feedPostsData = [
     id: 1,
     author: { name: 'Nikkei Asia', avatarUrl: 'https://i.pravatar.cc/150?u=nikkeiasia' },
     timestamp: '2h',
-    content: 'Asia Daily Briefing newsletter\nGet daily updates on Asia’s top stories of business, politics, tech and more.\nSign up now >',
+    content: 'Asia Daily Briefing newsletter\nGet daily updates on Asia\'s top stories of business, politics, tech and more.\nSign up now >',
     media: { type: 'image', url: 'https://images.unsplash.com/photo-1501854140801-50d01698950b?q=80&w=800&auto=format&fit=crop' },
     likes: 578,
     comments: 8,
@@ -1056,6 +1056,7 @@ const GlobalStyles = () => (
     }
     .person-card {
       flex: 0 0 140px;
+      max-width: 140px;
       border: 1px solid var(--border-color);
       border-radius: 8px;
       padding: 16px;
@@ -1065,12 +1066,20 @@ const GlobalStyles = () => (
       width: 56px;
       height: 56px;
       border-radius: 50%;
+      display: block;
+      margin: 0 auto;
     }
     .person-name {
+      display: block;
+      width: 100%;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
       color: var(--text-color);
       font-weight: 600;
-      font-size: 14px;
-      margin: 8px 0 4px 0;
+      font-size: 15px;
+      margin: 0 0 6px 0;
+      line-height: 1.3;
     }
     .person-headline {
       font-size: 12px;
