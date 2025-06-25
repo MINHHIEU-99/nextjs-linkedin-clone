@@ -648,14 +648,18 @@ function PostCreation({ onPostCreated }: { onPostCreated: (post: Post) => void }
     <div className="card post-creation-container">
       <div className="post-creation-row">
         <img src={userProfile.avatarUrl} alt="avatar" className="post-creation-avatar" width={48} height={48} />
-        <button className="post-creation-input" onClick={() => {/* open modal or focus textarea */}}>
-          Start a post
-        </button>
+        <input
+          type="text"
+          className="post-creation-input"
+          placeholder="Start a post"
+          value={content}
+          onChange={(e) => setContent(e.target.value)}
+        />
       </div>
       <div className="post-creation-actions">
         <button className="action-btn video"><span>▶️</span> Video</button>
         <button className="action-btn photo"><span>🖼️</span> Photo</button>
-        <button className="action-btn article"><span>📝</span> Write article</button>
+        <button className="action-btn article" onClick={handlePost} disabled={!content.trim()} aria-label="Submit post"><span>📝</span> Post</button>
       </div>
     </div>
   );
