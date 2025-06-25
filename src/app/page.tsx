@@ -34,12 +34,28 @@ const feedPostsData = [
     id: 1,
     author: { name: 'Nikkei Asia', avatarUrl: 'https://i.pravatar.cc/150?u=nikkeiasia' },
     timestamp: '2h',
-    content: 'Asia Daily Briefing newsletter\nGet daily updates on Asia’s top stories of business, politics, tech and more.\nSign up now >',
+    content: 'Asia Daily Briefing newsletter\nGet daily updates on Asia\'s top stories of business, politics, tech and more.\nSign up now >',
     media: { type: 'image', url: 'https://images.unsplash.com/photo-1501854140801-50d01698950b?q=80&w=800&auto=format&fit=crop' },
     likes: 578,
     comments: 8,
     reposts: 5,
     sends: 0,
+    initialComments: [
+      {
+        id: 101,
+        author: 'Christian Miran',
+        content: 'Love this Avani Solanki Prabhakar and saving half a million meetings is an amazing stat!',
+        timestamp: '3mo',
+        avatarUrl: 'https://i.pravatar.cc/150?u=christian',
+      },
+      {
+        id: 102,
+        author: 'Maaz Khan',
+        content: 'Love this!',
+        timestamp: '1w',
+        avatarUrl: 'https://i.pravatar.cc/150?u=maaz',
+      },
+    ],
   },
   {
     id: 2,
@@ -51,6 +67,22 @@ const feedPostsData = [
     comments: 112,
     reposts: 30,
     sends: 15,
+    initialComments: [
+      {
+        id: 201,
+        author: 'Alex Lee',
+        content: 'Great article, Sarah! Learned a lot.',
+        timestamp: '1d',
+        avatarUrl: 'https://i.pravatar.cc/150?u=alex',
+      },
+      {
+        id: 202,
+        author: 'Priya Patel',
+        content: 'Thanks for sharing these tips!',
+        timestamp: '22h',
+        avatarUrl: 'https://i.pravatar.cc/150?u=priya',
+      },
+    ],
   },
   {
     id: 3,
@@ -62,6 +94,22 @@ const feedPostsData = [
     comments: 450,
     reposts: 100,
     sends: 50,
+    initialComments: [
+      {
+        id: 301,
+        author: 'Samira Chen',
+        content: 'Excited to apply for these roles!',
+        timestamp: '2d',
+        avatarUrl: 'https://i.pravatar.cc/150?u=samira',
+      },
+      {
+        id: 302,
+        author: 'John Doe',
+        content: 'Is there an opening for frontend developers?',
+        timestamp: '1d',
+        avatarUrl: 'https://i.pravatar.cc/150?u=john',
+      },
+    ],
   },
 ];
 
@@ -109,6 +157,14 @@ interface Person {
   avatarUrl: string;
 }
 
+interface Comment {
+  id: number;
+  author: string;
+  content: string;
+  timestamp: string;
+  avatarUrl: string;
+}
+
 interface Post {
   id: number;
   author: { name: string; avatarUrl: string };
@@ -119,6 +175,7 @@ interface Post {
   comments: number;
   reposts: number;
   sends: number;
+  initialComments?: Comment[];
 }
 
 interface Notification {
@@ -165,7 +222,7 @@ const HomeIcon = ({ active }: { active?: boolean }) => (
 
 const NetworkIcon = ({ active }: { active?: boolean }) => (
   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill={active ? 'black' : 'currentColor'} width="24" height="24">
-    <path d="M16 13c-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4-1.79-4-4-4zm-8 0c-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4-1.79-4-4-4zm0-2c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm8 0c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4z" />
+    <path d="M16 13c-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4-1.79-4-4-4zm-8 0c-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4-1.79-4-4-4zm0-2c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4z" />
   </svg>
 );
 
@@ -199,8 +256,8 @@ const MessageIcon = () => (
   </svg>
 );
 
-const LikeIcon = () => (
-  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+const LikeIcon = ({ active }: { active?: boolean }) => (
+  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill={active ? "#0A66C2" : "none"} stroke={active ? "#0A66C2" : "currentColor"} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
     <path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3zM7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3"/>
   </svg>
 );
@@ -616,6 +673,7 @@ function MyNetwork() {
 }
 
 function PostCreation({ onPostCreated }: { onPostCreated: (post: Post) => void }) {
+  const [showEditor, setShowEditor] = useState(false);
   const [content, setContent] = useState('');
   const [image, setImage] = useState<string | null>(null);
 
@@ -631,10 +689,12 @@ function PostCreation({ onPostCreated }: { onPostCreated: (post: Post) => void }
       comments: 0,
       reposts: 0,
       sends: 0,
+      initialComments: [],
     };
     onPostCreated(newPost);
     setContent('');
     setImage(null);
+    setShowEditor(false);
   };
 
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -646,29 +706,35 @@ function PostCreation({ onPostCreated }: { onPostCreated: (post: Post) => void }
 
   return (
     <div className="card post-creation-container">
-      <img src={userProfile.avatarUrl} alt="avatar" className="post-creation-avatar" width={48} height={48} />
-      <textarea
-        className="post-creation-input"
-        placeholder="Start a post"
-        value={content}
-        onChange={(e) => setContent(e.target.value)}
-        aria-label="Create a new post"
-      />
-      <div className="post-creation-actions">
-        <label className="image-upload-button" aria-label="Upload image">
-          <input type="file" accept="image/*" onChange={handleImageUpload} hidden />
-          📷
-        </label>
-        <button
-          className="post-button"
-          onClick={handlePost}
-          disabled={!content.trim()}
-          aria-label="Submit post"
-        >
-          Post
-        </button>
-      </div>
-      {image && <img src={image} alt="Uploaded preview" className="post-preview-image" width={100} height={100} />}
+      {showEditor ? (
+        <>
+          <div className="post-creation-row">
+            <img src={userProfile.avatarUrl} alt="avatar" className="post-creation-avatar" width={48} height={48} />
+            <textarea
+              className="post-creation-input"
+              placeholder="Start a post"
+              value={content}
+              onChange={(e) => setContent(e.target.value)}
+            />
+          </div>
+          <div className="post-creation-actions">
+            <button className="action-btn video"><span>▶️</span> Video</button>
+            <button className="action-btn photo"><span>🖼️</span> Photo</button>
+            <button className="action-btn article" onClick={handlePost} disabled={!content.trim()} aria-label="Submit post"><span>📝</span> Post</button>
+          </div>
+        </>
+      ) : (
+        <div className="post-creation-row">
+          <img src={userProfile.avatarUrl} alt="avatar" className="post-creation-avatar" width={48} height={48} />
+          <button
+            className="post-creation-input"
+            onClick={() => setShowEditor(true)}
+            aria-label="Start a post"
+          >
+            Start a post
+          </button>
+        </div>
+      )}
     </div>
   );
 }
@@ -785,6 +851,7 @@ function Jobs() {
 
 function FeedPost({ post }: { post: Post }) {
   const [likes, setLikes] = useState(post.likes);
+  const [liked, setLiked] = useState(false);
   const [comments, setComments] = useState(post.comments);
   const [reposts, setReposts] = useState(post.reposts);
   const [sends, setSends] = useState(post.sends);
@@ -792,28 +859,29 @@ function FeedPost({ post }: { post: Post }) {
   const [newComment, setNewComment] = useState('');
   const [postComments, setPostComments] = useState(post.initialComments || []);
 
-  const ActionButton = ({ icon, count, onClick, label }: { icon: React.ReactNode; count: number; onClick: () => void; label: string }) => (
-    <button className="action-button" onClick={onClick} aria-label={`${label} (${count})`}>
-      <div className="action-content">
-        {icon}
-      </div>
-      <span className="action-label">{label}</span>
-      {/* <span className="action-count">{count}</span> */}
-    </button>
-  );
+  const handleLike = () => {
+    if (liked) {
+      setLikes(likes - 1);
+      setLiked(false);
+    } else {
+      setLikes(likes + 1);
+      setLiked(true);
+    }
+  };
 
   const addComment = () => {
-  if (newComment.trim()) {
-    const comment: Comment = {
-      id: Date.now(),
-      author: userProfile.name,
-      content: newComment,
-      timestamp: 'Just now',
-    };
-    setPostComments([...postComments, comment]);
-    setComments(comments + 1);
-    setNewComment('');
-  }
+    if (newComment.trim()) {
+      const comment: Comment = {
+        id: Date.now(),
+        author: userProfile.name,
+        content: newComment,
+        timestamp: 'Just now',
+        avatarUrl: 'https://i.pravatar.cc/150?u=john',
+      };
+      setPostComments([...postComments, comment]);
+      setComments(comments + 1);
+      setNewComment('');
+    }
   };
 
   return (
@@ -833,11 +901,28 @@ function FeedPost({ post }: { post: Post }) {
       </div>
       <div className="post-stats">
         <span>{likes} Likes</span>
-        <span>{comments} Comments • {reposts} Reposts</span>
+        <div>
+          <span
+            className="comments-count"
+            onClick={() => setShowComments(true)}
+            tabIndex={0}
+            role="button"
+            aria-label="Show comments"
+          >{comments} Comments</span> • <span>{reposts} Reposts</span>
+        </div>
       </div>
       <div className="post-actions-bar">
-        <ActionButton icon={<LikeIcon />} onClick={() => setLikes(likes + 1)} label="Like" />
-        <ActionButton icon={<CommentIcon />} onClick={() => setShowComments(!showComments)} label="Comment" />
+        <ActionButton
+          icon={<LikeIcon active={liked} />}
+          onClick={handleLike}
+          label="Like"
+          active={liked}
+        />
+        <ActionButton
+          icon={<CommentIcon />}
+          onClick={() => setShowComments(true)}
+          label="Comment"
+        />
         <ActionButton icon={<RepostIcon />} onClick={() => setReposts(reposts + 1)} label="Repost" />
         <ActionButton icon={<SendIcon />} onClick={() => setSends(sends + 1)} label="Send" />
       </div>
@@ -846,9 +931,18 @@ function FeedPost({ post }: { post: Post }) {
           <div className="comments-list">
             {postComments.map((comment) => (
               <div key={comment.id} className="comment-item">
-                <p className="comment-author"><strong>{comment.author}</strong></p>
-                <p className="comment-content">{comment.content}</p>
-                <p className="comment-timestamp">{comment.timestamp}</p>
+                <img src={comment.avatarUrl} alt={comment.author} className="comment-avatar" />
+                <div className="comment-content-block">
+                  <div className="comment-author-row">
+                    <span className="comment-author">{comment.author}</span>
+                    <span className="comment-timestamp">{comment.timestamp}</span>
+                  </div>
+                  <div className="comment-content">{comment.content}</div>
+                  <div className="comment-actions">
+                    <button className="comment-action-btn">Like</button>
+                    <button className="comment-action-btn">Reply</button>
+                  </div>
+                </div>
               </div>
             ))}
           </div>
@@ -869,6 +963,30 @@ function FeedPost({ post }: { post: Post }) {
     </div>
   );
 }
+
+const ActionButton = ({
+  icon,
+  count,
+  onClick,
+  label,
+  active = false,
+}: {
+  icon: React.ReactNode;
+  count?: number;
+  onClick: () => void;
+  label: string;
+  active?: boolean;
+}) => (
+  <button
+    className={`action-button${active ? ' active' : ''}`}
+    onClick={onClick}
+    aria-label={`${label}${count !== undefined ? ` (${count})` : ''}`}
+  >
+    <div className="action-content">{icon}</div>
+    <span className="action-label">{label}</span>
+    {/* <span className="action-count">{count}</span> */}
+  </button>
+);
 
 // --- MAIN PAGE COMPONENT ---
 
@@ -985,6 +1103,9 @@ const GlobalStyles = () => (
       height: 72px;
       border-radius: 50%;
       margin-bottom: 8px;
+      display: block;
+      margin-left: auto;
+      margin-right: auto;
     }
     .profile-summary h3 {
       margin: 0 0 4px 0;
@@ -1037,6 +1158,7 @@ const GlobalStyles = () => (
 
     /* PeopleYouMayKnow Styles */
     .card h4 {
+      color: var(--text-color);
       margin: 0 0 12px 0;
       font-size: 16px;
     }
@@ -1052,6 +1174,7 @@ const GlobalStyles = () => (
     }
     .person-card {
       flex: 0 0 140px;
+      max-width: 140px;
       border: 1px solid var(--border-color);
       border-radius: 8px;
       padding: 16px;
@@ -1061,11 +1184,20 @@ const GlobalStyles = () => (
       width: 56px;
       height: 56px;
       border-radius: 50%;
+      display: block;
+      margin: 0 auto;
     }
     .person-name {
+      display: block;
+      width: 100%;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      color: var(--text-color);
       font-weight: 600;
-      font-size: 14px;
-      margin: 8px 0 4px 0;
+      font-size: 15px;
+      margin: 0 0 6px 0;
+      line-height: 1.3;
     }
     .person-headline {
       font-size: 12px;
@@ -1136,58 +1268,67 @@ const GlobalStyles = () => (
     .post-creation-container {
       display: flex;
       flex-direction: column;
-      padding: 12px 16px;
-      background-color: white;
+      padding: 16px;
+      background: white;
+      border-radius: 12px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+      margin-bottom: 16px;
+    }
+    .post-creation-row {
+      display: flex;
+      align-items: center;
+      gap: 12px;
     }
     .post-creation-avatar {
       width: 48px;
       height: 48px;
       border-radius: 50%;
-      margin-bottom: 12px;
+      object-fit: cover;
     }
     .post-creation-input {
-      flex-grow: 1;
+      flex: 1;
+      background: #f3f2ef;
       border: 1px solid #ccc;
-      border-radius: 8px;
-      padding: 12px 16px;
-      color: var(--text-color-secondary);
-      min-height: 80px;
-      resize: vertical;
-      width: 100%;
-    }
-    .post-creation-input:hover, .post-creation-input:focus {
-      background-color: #f0f0f0;
+      border-radius: 999px;
+      padding: 14px 20px;
+      font-size: 18px;
+      color: #666;
+      text-align: left;
+      cursor: pointer;
       outline: none;
+      transition: border 0.2s;
+      border: 1.5px solid #e0e0e0;
+    }
+    .post-creation-input:focus,
+    .post-creation-input:hover {
+      border: 1.5px solid #0A66C2;
+      background: #fff;
     }
     .post-creation-actions {
       display: flex;
-      justify-content: flex-end;
-      gap: 12px;
-      margin-top: 8px;
+      justify-content: space-between;
+      margin-top: 16px;
+      gap: 8px;
     }
-    .image-upload-button {
-      cursor: pointer;
-      font-size: 20px;
-    }
-    .post-button {
-      padding: 6px 16px;
-      border-radius: 16px;
-      border: 1px solid var(--primary-blue);
-      color: var(--primary-blue);
-      background-color: transparent;
+    .action-btn {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: none;
+      border: none;
+      color: #666;
       font-weight: 600;
+      font-size: 16px;
       cursor: pointer;
-    }
-    .post-button:disabled {
-      opacity: 0.5;
-      cursor: not-allowed;
-    }
-    .post-button:hover:not(:disabled) {
-      background-color: #eef3f8;
-    }
-    .post-preview-image {
-      margin-top: 8px;
+      padding: 8px 12px;
       border-radius: 8px;
+      transition: background 0.2s;
+    }
+    .action-btn.video span { color: #37833b; }
+    .action-btn.photo span { color: #0a66c2; }
+    .action-btn.article span { color: #b24020; }
+    .action-btn:hover {
+      background: #f3f2ef;
     }
 
     /* Notifications Styles */
@@ -1305,6 +1446,7 @@ const GlobalStyles = () => (
       flex-grow: 1;
     }
     .author-name {
+      color: var(--text-color);
       font-weight: 600;
       margin: 0;
     }
@@ -1320,6 +1462,7 @@ const GlobalStyles = () => (
     }
     .post-content {
       margin: 0;
+      color: var(--text-color);
       font-size: 16px;
       line-height: 1.5;
       white-space: pre-wrap;
@@ -1382,6 +1525,157 @@ const GlobalStyles = () => (
       font-size: 12px;
       color: #606060;
       margin-top: 2px;
+    }
+    .action-button.active,
+    .action-button.active .action-label {
+      color: #0A66C2;
+    }
+    .action-button.active svg {
+      stroke: #0A66C2;
+      fill: #0A66C2;
+    }
+    .post-stats span {
+      cursor: pointer;
+      transition: color 0.2s, text-decoration 0.2s;
+    }
+    .post-stats span:hover {
+      color: #0A66C2;
+      text-decoration: underline;
+    }
+    .comments-count {
+      cursor: pointer;
+      margin: 0 8px;
+    }
+    .comments-count:focus {
+      outline: 2px solid #0A66C2;
+    }
+
+    .comments-section {
+      margin-top: 8px;
+      background: #fff;
+      border-radius: 0 0 12px 12px;
+      padding: 0 0 8px 0;
+    }
+
+    .comments-list {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      margin-top: 8px;
+    }
+
+    .comment-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+      padding: 0 16px;
+    }
+
+    .comment-avatar {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      object-fit: cover;
+      margin-top: 2px;
+    }
+
+    .comment-content-block {
+      flex: 1;
+      background: #f3f2ef;
+      border-radius: 12px;
+      padding: 10px 16px;
+      position: relative;
+    }
+
+    .comment-author-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .comment-author {
+      font-weight: 600;
+      color: #222;
+      margin: 0;
+      font-size: 15px;
+    }
+
+    .comment-timestamp {
+      color: #888;
+      font-size: 13px;
+      margin-left: 4px;
+    }
+
+    .comment-content {
+      margin: 4px 0 0 0;
+      font-size: 15px;
+      color: #222;
+      line-height: 1.5;
+      word-break: break-word;
+    }
+
+    .comment-actions {
+      display: flex;
+      gap: 16px;
+      margin-top: 4px;
+    }
+
+    .comment-action-btn {
+      background: none;
+      border: none;
+      color: #666;
+      font-size: 14px;
+      cursor: pointer;
+      padding: 0;
+      transition: color 0.2s;
+    }
+
+    .comment-action-btn:hover {
+      color: #0A66C2;
+      text-decoration: underline;
+    }
+
+    .comment-input-container {
+      display: flex;
+      align-items: flex-start;
+      gap: 8px;
+      padding: 12px 16px 0 16px;
+    }
+
+    .comment-input {
+      flex: 1;
+      border: 1px solid #e0e0e0;
+      border-radius: 24px;
+      padding: 10px 16px;
+      font-size: 15px;
+      resize: none;
+      background: #f3f2ef;
+      color: #222;
+      outline: none;
+      transition: border 0.2s;
+    }
+
+    .comment-input:focus {
+      border: 1.5px solid #0A66C2;
+      background: #fff;
+    }
+
+    .comment-submit-button {
+      background: #0A66C2;
+      color: #fff;
+      border: none;
+      border-radius: 24px;
+      padding: 8px 18px;
+      font-size: 15px;
+      font-weight: 600;
+      cursor: pointer;
+      margin-left: 4px;
+      transition: background 0.2s;
+    }
+
+    .comment-submit-button:disabled {
+      background: #b3d3ea;
+      cursor: not-allowed;
     }
   `}</style>
 );
