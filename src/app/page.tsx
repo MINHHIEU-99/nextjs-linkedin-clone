@@ -1063,6 +1063,7 @@ const GlobalStyles = () => (
       border-radius: 50%;
     }
     .person-name {
+      color: var(--text-color);
       font-weight: 600;
       font-size: 14px;
       margin: 8px 0 4px 0;
