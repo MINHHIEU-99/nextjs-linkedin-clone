@@ -985,6 +985,9 @@ const GlobalStyles = () => (
       height: 72px;
       border-radius: 50%;
       margin-bottom: 8px;
+      display: block;
+      margin-left: auto;
+      margin-right: auto;
     }
     .profile-summary h3 {
       margin: 0 0 4px 0;
@@ -1037,6 +1040,7 @@ const GlobalStyles = () => (
 
     /* PeopleYouMayKnow Styles */
     .card h4 {
+      color: var(--text-color);
       margin: 0 0 12px 0;
       font-size: 16px;
     }
@@ -1306,6 +1310,7 @@ const GlobalStyles = () => (
       flex-grow: 1;
     }
     .author-name {
+      color: var(--text-color);
       font-weight: 600;
       margin: 0;
     }
@@ -1321,6 +1326,7 @@ const GlobalStyles = () => (
     }
     .post-content {
       margin: 0;
+      color: var(--text-color);
       font-size: 16px;
       line-height: 1.5;
       white-space: pre-wrap;
