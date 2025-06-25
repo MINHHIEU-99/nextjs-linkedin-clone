@@ -826,7 +826,7 @@ function FeedPost({ post }: { post: Post }) {
       </div>
       <div className="post-stats">
         <span>{likes} Likes</span>
-        <span>{comments} Comments • {reposts} Reposts</span>
+        <div><span>{comments} Comments</span> • <span>{reposts} Reposts</span></div>
       </div>
       <div className="post-actions-bar">
         <ActionButton
@@ -1437,6 +1437,14 @@ const GlobalStyles = () => (
     .action-button.active svg {
       stroke: #0A66C2;
       fill: #0A66C2;
+    }
+    .post-stats span {
+      cursor: pointer;
+      transition: color 0.2s, text-decoration 0.2s;
+    }
+    .post-stats span:hover {
+      color: #0A66C2;
+      text-decoration: underline;
     }
   `}</style>
 );
