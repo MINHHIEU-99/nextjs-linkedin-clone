@@ -199,8 +199,8 @@ const MessageIcon = () => (
   </svg>
 );
 
-const LikeIcon = () => (
-  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+const LikeIcon = ({ active }: { active?: boolean }) => (
+  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill={active ? "#0A66C2" : "none"} stroke={active ? "#0A66C2" : "currentColor"} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
     <path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3zM7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3"/>
   </svg>
 );
@@ -777,6 +777,7 @@ function Jobs() {
 
 function FeedPost({ post }: { post: Post }) {
   const [likes, setLikes] = useState(post.likes);
+  const [liked, setLiked] = useState(false);
   const [comments, setComments] = useState(post.comments);
   const [reposts, setReposts] = useState(post.reposts);
   const [sends, setSends] = useState(post.sends);
@@ -784,28 +785,28 @@ function FeedPost({ post }: { post: Post }) {
   const [newComment, setNewComment] = useState('');
   const [postComments, setPostComments] = useState(post.initialComments || []);
 
-  const ActionButton = ({ icon, count, onClick, label }: { icon: React.ReactNode; count: number; onClick: () => void; label: string }) => (
-    <button className="action-button" onClick={onClick} aria-label={`${label} (${count})`}>
-      <div className="action-content">
-        {icon}
-      </div>
-      <span className="action-label">{label}</span>
-      {/* <span className="action-count">{count}</span> */}
-    </button>
-  );
+  const handleLike = () => {
+    if (liked) {
+      setLikes(likes - 1);
+      setLiked(false);
+    } else {
+      setLikes(likes + 1);
+      setLiked(true);
+    }
+  };
 
   const addComment = () => {
-  if (newComment.trim()) {
-    const comment: Comment = {
-      id: Date.now(),
-      author: userProfile.name,
-      content: newComment,
-      timestamp: 'Just now',
-    };
-    setPostComments([...postComments, comment]);
-    setComments(comments + 1);
-    setNewComment('');
-  }
+    if (newComment.trim()) {
+      const comment: Comment = {
+        id: Date.now(),
+        author: userProfile.name,
+        content: newComment,
+        timestamp: 'Just now',
+      };
+      setPostComments([...postComments, comment]);
+      setComments(comments + 1);
+      setNewComment('');
+    }
   };
 
   return (
@@ -828,7 +829,12 @@ function FeedPost({ post }: { post: Post }) {
         <span>{comments} Comments • {reposts} Reposts</span>
       </div>
       <div className="post-actions-bar">
-        <ActionButton icon={<LikeIcon />} onClick={() => setLikes(likes + 1)} label="Like" />
+        <ActionButton
+          icon={<LikeIcon active={liked} />}
+          onClick={handleLike}
+          label="Like"
+          active={liked}
+        />
         <ActionButton icon={<CommentIcon />} onClick={() => setShowComments(!showComments)} label="Comment" />
         <ActionButton icon={<RepostIcon />} onClick={() => setReposts(reposts + 1)} label="Repost" />
         <ActionButton icon={<SendIcon />} onClick={() => setSends(sends + 1)} label="Send" />
@@ -861,6 +867,30 @@ function FeedPost({ post }: { post: Post }) {
     </div>
   );
 }
+
+const ActionButton = ({
+  icon,
+  count,
+  onClick,
+  label,
+  active = false,
+}: {
+  icon: React.ReactNode;
+  count?: number;
+  onClick: () => void;
+  label: string;
+  active?: boolean;
+}) => (
+  <button
+    className={`action-button${active ? ' active' : ''}`}
+    onClick={onClick}
+    aria-label={`${label}${count !== undefined ? ` (${count})` : ''}`}
+  >
+    <div className="action-content">{icon}</div>
+    <span className="action-label">{label}</span>
+    {/* <span className="action-count">{count}</span> */}
+  </button>
+);
 
 // --- MAIN PAGE COMPONENT ---
 
@@ -1399,6 +1429,14 @@ const GlobalStyles = () => (
       font-size: 12px;
       color: #606060;
       margin-top: 2px;
+    }
+    .action-button.active,
+    .action-button.active .action-label {
+      color: #0A66C2;
+    }
+    .action-button.active svg {
+      stroke: #0A66C2;
+      fill: #0A66C2;
     }
   `}</style>
 );
