@@ -40,6 +40,22 @@ const feedPostsData = [
     comments: 8,
     reposts: 5,
     sends: 0,
+    initialComments: [
+      {
+        id: 101,
+        author: 'Christian Miran',
+        content: 'Love this Avani Solanki Prabhakar and saving half a million meetings is an amazing stat!',
+        timestamp: '3mo',
+        avatarUrl: 'https://i.pravatar.cc/150?u=christian',
+      },
+      {
+        id: 102,
+        author: 'Maaz Khan',
+        content: 'Love this!',
+        timestamp: '1w',
+        avatarUrl: 'https://i.pravatar.cc/150?u=maaz',
+      },
+    ],
   },
   {
     id: 2,
@@ -51,6 +67,22 @@ const feedPostsData = [
     comments: 112,
     reposts: 30,
     sends: 15,
+    initialComments: [
+      {
+        id: 201,
+        author: 'Alex Lee',
+        content: 'Great article, Sarah! Learned a lot.',
+        timestamp: '1d',
+        avatarUrl: 'https://i.pravatar.cc/150?u=alex',
+      },
+      {
+        id: 202,
+        author: 'Priya Patel',
+        content: 'Thanks for sharing these tips!',
+        timestamp: '22h',
+        avatarUrl: 'https://i.pravatar.cc/150?u=priya',
+      },
+    ],
   },
   {
     id: 3,
@@ -62,6 +94,22 @@ const feedPostsData = [
     comments: 450,
     reposts: 100,
     sends: 50,
+    initialComments: [
+      {
+        id: 301,
+        author: 'Samira Chen',
+        content: 'Excited to apply for these roles!',
+        timestamp: '2d',
+        avatarUrl: 'https://i.pravatar.cc/150?u=samira',
+      },
+      {
+        id: 302,
+        author: 'John Doe',
+        content: 'Is there an opening for frontend developers?',
+        timestamp: '1d',
+        avatarUrl: 'https://i.pravatar.cc/150?u=john',
+      },
+    ],
   },
 ];
 
@@ -109,6 +157,14 @@ interface Person {
   avatarUrl: string;
 }
 
+interface Comment {
+  id: number;
+  author: string;
+  content: string;
+  timestamp: string;
+  avatarUrl: string;
+}
+
 interface Post {
   id: number;
   author: { name: string; avatarUrl: string };
@@ -119,6 +175,7 @@ interface Post {
   comments: number;
   reposts: number;
   sends: number;
+  initialComments?: Comment[];
 }
 
 interface Notification {
@@ -165,7 +222,7 @@ const HomeIcon = ({ active }: { active?: boolean }) => (
 
 const NetworkIcon = ({ active }: { active?: boolean }) => (
   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill={active ? 'black' : 'currentColor'} width="24" height="24">
-    <path d="M16 13c-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4-1.79-4-4-4zm-8 0c-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4-1.79-4-4-4zm0-2c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm8 0c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4z" />
+    <path d="M16 13c-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4-1.79-4-4-4zm-8 0c-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4-1.79-4-4-4zm0-2c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4z" />
   </svg>
 );
 
@@ -616,6 +673,7 @@ function MyNetwork() {
 }
 
 function PostCreation({ onPostCreated }: { onPostCreated: (post: Post) => void }) {
+  const [showEditor, setShowEditor] = useState(false);
   const [content, setContent] = useState('');
   const [image, setImage] = useState<string | null>(null);
 
@@ -631,10 +689,12 @@ function PostCreation({ onPostCreated }: { onPostCreated: (post: Post) => void }
       comments: 0,
       reposts: 0,
       sends: 0,
+      initialComments: [],
     };
     onPostCreated(newPost);
     setContent('');
     setImage(null);
+    setShowEditor(false);
   };
 
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -646,21 +706,35 @@ function PostCreation({ onPostCreated }: { onPostCreated: (post: Post) => void }
 
   return (
     <div className="card post-creation-container">
-      <div className="post-creation-row">
-        <img src={userProfile.avatarUrl} alt="avatar" className="post-creation-avatar" width={48} height={48} />
-        <input
-          type="text"
-          className="post-creation-input"
-          placeholder="Start a post"
-          value={content}
-          onChange={(e) => setContent(e.target.value)}
-        />
-      </div>
-      <div className="post-creation-actions">
-        <button className="action-btn video"><span>▶️</span> Video</button>
-        <button className="action-btn photo"><span>🖼️</span> Photo</button>
-        <button className="action-btn article" onClick={handlePost} disabled={!content.trim()} aria-label="Submit post"><span>📝</span> Post</button>
-      </div>
+      {showEditor ? (
+        <>
+          <div className="post-creation-row">
+            <img src={userProfile.avatarUrl} alt="avatar" className="post-creation-avatar" width={48} height={48} />
+            <textarea
+              className="post-creation-input"
+              placeholder="Start a post"
+              value={content}
+              onChange={(e) => setContent(e.target.value)}
+            />
+          </div>
+          <div className="post-creation-actions">
+            <button className="action-btn video"><span>▶️</span> Video</button>
+            <button className="action-btn photo"><span>🖼️</span> Photo</button>
+            <button className="action-btn article" onClick={handlePost} disabled={!content.trim()} aria-label="Submit post"><span>📝</span> Post</button>
+          </div>
+        </>
+      ) : (
+        <div className="post-creation-row">
+          <img src={userProfile.avatarUrl} alt="avatar" className="post-creation-avatar" width={48} height={48} />
+          <button
+            className="post-creation-input"
+            onClick={() => setShowEditor(true)}
+            aria-label="Start a post"
+          >
+            Start a post
+          </button>
+        </div>
+      )}
     </div>
   );
 }
@@ -802,6 +876,7 @@ function FeedPost({ post }: { post: Post }) {
         author: userProfile.name,
         content: newComment,
         timestamp: 'Just now',
+        avatarUrl: 'https://i.pravatar.cc/150?u=john',
       };
       setPostComments([...postComments, comment]);
       setComments(comments + 1);
@@ -826,7 +901,15 @@ function FeedPost({ post }: { post: Post }) {
       </div>
       <div className="post-stats">
         <span>{likes} Likes</span>
-        <div><span>{comments} Comments</span> • <span>{reposts} Reposts</span></div>
+        <div>
+          <span
+            className="comments-count"
+            onClick={() => setShowComments(true)}
+            tabIndex={0}
+            role="button"
+            aria-label="Show comments"
+          >{comments} Comments</span> • <span>{reposts} Reposts</span>
+        </div>
       </div>
       <div className="post-actions-bar">
         <ActionButton
@@ -835,7 +918,11 @@ function FeedPost({ post }: { post: Post }) {
           label="Like"
           active={liked}
         />
-        <ActionButton icon={<CommentIcon />} onClick={() => setShowComments(!showComments)} label="Comment" />
+        <ActionButton
+          icon={<CommentIcon />}
+          onClick={() => setShowComments(true)}
+          label="Comment"
+        />
         <ActionButton icon={<RepostIcon />} onClick={() => setReposts(reposts + 1)} label="Repost" />
         <ActionButton icon={<SendIcon />} onClick={() => setSends(sends + 1)} label="Send" />
       </div>
@@ -844,9 +931,18 @@ function FeedPost({ post }: { post: Post }) {
           <div className="comments-list">
             {postComments.map((comment) => (
               <div key={comment.id} className="comment-item">
-                <p className="comment-author"><strong>{comment.author}</strong></p>
-                <p className="comment-content">{comment.content}</p>
-                <p className="comment-timestamp">{comment.timestamp}</p>
+                <img src={comment.avatarUrl} alt={comment.author} className="comment-avatar" />
+                <div className="comment-content-block">
+                  <div className="comment-author-row">
+                    <span className="comment-author">{comment.author}</span>
+                    <span className="comment-timestamp">{comment.timestamp}</span>
+                  </div>
+                  <div className="comment-content">{comment.content}</div>
+                  <div className="comment-actions">
+                    <button className="comment-action-btn">Like</button>
+                    <button className="comment-action-btn">Reply</button>
+                  </div>
+                </div>
               </div>
             ))}
           </div>
@@ -1445,6 +1541,141 @@ const GlobalStyles = () => (
     .post-stats span:hover {
       color: #0A66C2;
       text-decoration: underline;
+    }
+    .comments-count {
+      cursor: pointer;
+      margin: 0 8px;
+    }
+    .comments-count:focus {
+      outline: 2px solid #0A66C2;
+    }
+
+    .comments-section {
+      margin-top: 8px;
+      background: #fff;
+      border-radius: 0 0 12px 12px;
+      padding: 0 0 8px 0;
+    }
+
+    .comments-list {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      margin-top: 8px;
+    }
+
+    .comment-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+      padding: 0 16px;
+    }
+
+    .comment-avatar {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      object-fit: cover;
+      margin-top: 2px;
+    }
+
+    .comment-content-block {
+      flex: 1;
+      background: #f3f2ef;
+      border-radius: 12px;
+      padding: 10px 16px;
+      position: relative;
+    }
+
+    .comment-author-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .comment-author {
+      font-weight: 600;
+      color: #222;
+      margin: 0;
+      font-size: 15px;
+    }
+
+    .comment-timestamp {
+      color: #888;
+      font-size: 13px;
+      margin-left: 4px;
+    }
+
+    .comment-content {
+      margin: 4px 0 0 0;
+      font-size: 15px;
+      color: #222;
+      line-height: 1.5;
+      word-break: break-word;
+    }
+
+    .comment-actions {
+      display: flex;
+      gap: 16px;
+      margin-top: 4px;
+    }
+
+    .comment-action-btn {
+      background: none;
+      border: none;
+      color: #666;
+      font-size: 14px;
+      cursor: pointer;
+      padding: 0;
+      transition: color 0.2s;
+    }
+
+    .comment-action-btn:hover {
+      color: #0A66C2;
+      text-decoration: underline;
+    }
+
+    .comment-input-container {
+      display: flex;
+      align-items: flex-start;
+      gap: 8px;
+      padding: 12px 16px 0 16px;
+    }
+
+    .comment-input {
+      flex: 1;
+      border: 1px solid #e0e0e0;
+      border-radius: 24px;
+      padding: 10px 16px;
+      font-size: 15px;
+      resize: none;
+      background: #f3f2ef;
+      color: #222;
+      outline: none;
+      transition: border 0.2s;
+    }
+
+    .comment-input:focus {
+      border: 1.5px solid #0A66C2;
+      background: #fff;
+    }
+
+    .comment-submit-button {
+      background: #0A66C2;
+      color: #fff;
+      border: none;
+      border-radius: 24px;
+      padding: 8px 18px;
+      font-size: 15px;
+      font-weight: 600;
+      cursor: pointer;
+      margin-left: 4px;
+      transition: background 0.2s;
+    }
+
+    .comment-submit-button:disabled {
+      background: #b3d3ea;
+      cursor: not-allowed;
     }
   `}</style>
 );
