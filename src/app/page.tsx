@@ -646,29 +646,17 @@ function PostCreation({ onPostCreated }: { onPostCreated: (post: Post) => void }
 
   return (
     <div className="card post-creation-container">
-      <img src={userProfile.avatarUrl} alt="avatar" className="post-creation-avatar" width={48} height={48} />
-      <textarea
-        className="post-creation-input"
-        placeholder="Start a post"
-        value={content}
-        onChange={(e) => setContent(e.target.value)}
-        aria-label="Create a new post"
-      />
-      <div className="post-creation-actions">
-        <label className="image-upload-button" aria-label="Upload image">
-          <input type="file" accept="image/*" onChange={handleImageUpload} hidden />
-          📷
-        </label>
-        <button
-          className="post-button"
-          onClick={handlePost}
-          disabled={!content.trim()}
-          aria-label="Submit post"
-        >
-          Post
+      <div className="post-creation-row">
+        <img src={userProfile.avatarUrl} alt="avatar" className="post-creation-avatar" width={48} height={48} />
+        <button className="post-creation-input" onClick={() => {/* open modal or focus textarea */}}>
+          Start a post
         </button>
       </div>
-      {image && <img src={image} alt="Uploaded preview" className="post-preview-image" width={100} height={100} />}
+      <div className="post-creation-actions">
+        <button className="action-btn video"><span>▶️</span> Video</button>
+        <button className="action-btn photo"><span>🖼️</span> Photo</button>
+        <button className="action-btn article"><span>📝</span> Write article</button>
+      </div>
     </div>
   );
 }
@@ -1150,58 +1138,67 @@ const GlobalStyles = () => (
     .post-creation-container {
       display: flex;
       flex-direction: column;
-      padding: 12px 16px;
-      background-color: white;
+      padding: 16px;
+      background: white;
+      border-radius: 12px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+      margin-bottom: 16px;
+    }
+    .post-creation-row {
+      display: flex;
+      align-items: center;
+      gap: 12px;
     }
     .post-creation-avatar {
       width: 48px;
       height: 48px;
       border-radius: 50%;
-      margin-bottom: 12px;
+      object-fit: cover;
     }
     .post-creation-input {
-      flex-grow: 1;
+      flex: 1;
+      background: #f3f2ef;
       border: 1px solid #ccc;
-      border-radius: 8px;
-      padding: 12px 16px;
-      color: var(--text-color-secondary);
-      min-height: 80px;
-      resize: vertical;
-      width: 100%;
-    }
-    .post-creation-input:hover, .post-creation-input:focus {
-      background-color: #f0f0f0;
+      border-radius: 999px;
+      padding: 14px 20px;
+      font-size: 18px;
+      color: #666;
+      text-align: left;
+      cursor: pointer;
       outline: none;
+      transition: border 0.2s;
+      border: 1.5px solid #e0e0e0;
+    }
+    .post-creation-input:focus,
+    .post-creation-input:hover {
+      border: 1.5px solid #0A66C2;
+      background: #fff;
     }
     .post-creation-actions {
       display: flex;
-      justify-content: flex-end;
-      gap: 12px;
-      margin-top: 8px;
+      justify-content: space-between;
+      margin-top: 16px;
+      gap: 8px;
     }
-    .image-upload-button {
-      cursor: pointer;
-      font-size: 20px;
-    }
-    .post-button {
-      padding: 6px 16px;
-      border-radius: 16px;
-      border: 1px solid var(--primary-blue);
-      color: var(--primary-blue);
-      background-color: transparent;
+    .action-btn {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: none;
+      border: none;
+      color: #666;
       font-weight: 600;
+      font-size: 16px;
       cursor: pointer;
-    }
-    .post-button:disabled {
-      opacity: 0.5;
-      cursor: not-allowed;
-    }
-    .post-button:hover:not(:disabled) {
-      background-color: #eef3f8;
-    }
-    .post-preview-image {
-      margin-top: 8px;
+      padding: 8px 12px;
       border-radius: 8px;
+      transition: background 0.2s;
+    }
+    .action-btn.video span { color: #37833b; }
+    .action-btn.photo span { color: #0a66c2; }
+    .action-btn.article span { color: #b24020; }
+    .action-btn:hover {
+      background: #f3f2ef;
     }
 
     /* Notifications Styles */
