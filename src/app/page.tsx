@@ -1,11 +1,8 @@
 "use client";
 
 import React, { useState, useEffect } from 'react';
-import Image from 'next/image';
 
 // --- MOCK DATA & API SIMULATION ---
-
-const API_LATENCY = 1500; // 1.5 seconds to simulate 3G connection
 
 const userProfile = {
   name: "Allen Miller",
@@ -25,7 +22,7 @@ const peopleYouMayKnowData = [
   { id: 1, name: 'Satya Nadella', headline: 'Chairman and CEO at Microsoft', avatarUrl: 'https://i.pravatar.cc/150?u=satya' },
   { id: 2, name: 'Sundar Pichai', headline: 'CEO at Google', avatarUrl: 'https://i.pravatar.cc/150?u=sundar' },
   { id: 3, name: 'Jeff Bezos', headline: 'Founder and Executive Chair at Amazon', avatarUrl: 'https://i.pravatar.cc/150?u=jeff' },
-  { id: 4, name: 'Melinda French Gates', headline: 'Co-chair at Bill & Melinda Gates Foundation', avatarUrl: 'https://i.pravatar.cc/150?u=melinda' },
+  { id: 4, name: 'Melinda Gates', headline: 'Co-chair at Bill & Melinda Gates Foundation', avatarUrl: 'https://i.pravatar.cc/150?u=melinda' },
   { id: 5, name: 'Reid Hoffman', headline: 'Co-Founder of LinkedIn', avatarUrl: 'https://i.pravatar.cc/150?u=reid' },
 ];
 
@@ -34,12 +31,28 @@ const feedPostsData = [
     id: 1,
     author: { name: 'Nikkei Asia', avatarUrl: 'https://i.pravatar.cc/150?u=nikkeiasia' },
     timestamp: '2h',
-    content: 'Asia Daily Briefing newsletter\nGet daily updates on Asia’s top stories of business, politics, tech and more.\nSign up now >',
+    content: 'Asia Daily Briefing newsletter\nGet daily updates on Asia\'s top stories of business, politics, tech and more.\nSign up now >',
     media: { type: 'image', url: 'https://images.unsplash.com/photo-1501854140801-50d01698950b?q=80&w=800&auto=format&fit=crop' },
     likes: 578,
     comments: 8,
     reposts: 5,
     sends: 0,
+    initialComments: [
+      {
+        id: 101,
+        author: 'Christian Miran',
+        content: 'Love this Avani Solanki Prabhakar and saving half a million meetings is an amazing stat!',
+        timestamp: '3mo',
+        avatarUrl: 'https://i.pravatar.cc/150?u=christian',
+      },
+      {
+        id: 102,
+        author: 'Maaz Khan',
+        content: 'Love this!',
+        timestamp: '1w',
+        avatarUrl: 'https://i.pravatar.cc/150?u=maaz',
+      },
+    ],
   },
   {
     id: 2,
@@ -51,6 +64,22 @@ const feedPostsData = [
     comments: 112,
     reposts: 30,
     sends: 15,
+    initialComments: [
+      {
+        id: 201,
+        author: 'Alex Lee',
+        content: 'Great article, Sarah! Learned a lot.',
+        timestamp: '1d',
+        avatarUrl: 'https://i.pravatar.cc/150?u=alex',
+      },
+      {
+        id: 202,
+        author: 'Priya Patel',
+        content: 'Thanks for sharing these tips!',
+        timestamp: '22h',
+        avatarUrl: 'https://i.pravatar.cc/150?u=priya',
+      },
+    ],
   },
   {
     id: 3,
@@ -62,6 +91,22 @@ const feedPostsData = [
     comments: 450,
     reposts: 100,
     sends: 50,
+    initialComments: [
+      {
+        id: 301,
+        author: 'Samira Chen',
+        content: 'Excited to apply for these roles!',
+        timestamp: '2d',
+        avatarUrl: 'https://i.pravatar.cc/150?u=samira',
+      },
+      {
+        id: 302,
+        author: 'John Doe',
+        content: 'Is there an opening for frontend developers?',
+        timestamp: '1d',
+        avatarUrl: 'https://i.pravatar.cc/150?u=john',
+      },
+    ],
   },
 ];
 
@@ -109,6 +154,14 @@ interface Person {
   avatarUrl: string;
 }
 
+interface Comment {
+  id: number;
+  author: string;
+  content: string;
+  timestamp: string;
+  avatarUrl: string;
+}
+
 interface Post {
   id: number;
   author: { name: string; avatarUrl: string };
@@ -119,6 +172,7 @@ interface Post {
   comments: number;
   reposts: number;
   sends: number;
+  initialComments?: Comment[];
 }
 
 interface Notification {
@@ -140,19 +194,19 @@ interface Job {
 }
 
 const fetchPeopleYouMayKnow = async (): Promise<Person[]> => {
-  return new Promise(resolve => setTimeout(() => resolve(peopleYouMayKnowData), API_LATENCY));
+  return new Promise(resolve => setTimeout(() => resolve(peopleYouMayKnowData)));
 };
 
 const fetchConnections = async (): Promise<Person[]> => {
-  return new Promise(resolve => setTimeout(() => resolve(connectionsData), API_LATENCY));
+  return new Promise(resolve => setTimeout(() => resolve(connectionsData)));
 };
 
 const fetchNotifications = async (): Promise<Notification[]> => {
-  return new Promise(resolve => setTimeout(() => resolve(notificationsData), API_LATENCY));
+  return new Promise(resolve => setTimeout(() => resolve(notificationsData)));
 };
 
 const fetchJobs = async (): Promise<Job[]> => {
-  return new Promise(resolve => setTimeout(() => resolve(jobsData), API_LATENCY));
+  return new Promise(resolve => setTimeout(() => resolve(jobsData)));
 };
 
 // --- SVG ICONS ---
@@ -189,42 +243,42 @@ const JobsIcon = ({ active }: { active?: boolean }) => (
 
 const SearchIcon = () => (
   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" width="18" height="18">
-    <path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z"/>
+    <path d="M15.5 14h-.79l-.28-.27C15.41 12.59 16 11.11 16 9.5 16 5.91 13.09 3 9.5 3S3 5.91 3 9.5 5.91 16 9.5 16c1.61 0 3.09-.59 4.23-1.57l.27.28v.79l5 4.99L20.49 19l-4.99-5zm-6 0C7.01 14 5 11.99 5 9.5S7.01 5 9.5 5 14 7.01 14 9.5 11.99 14 9.5 14z" />
   </svg>
 );
 
 const MessageIcon = () => (
   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" width="24" height="24">
-    <path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm-2 12H6v-2h12v2zm0-3H6V9h12v2zm0-3H6V6h12v2z"/>
+    <path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm-2 12H6v-2h12v2zm0-3H6V9h12v2zm0-3H6V6h12v2z" />
   </svg>
 );
 
-const LikeIcon = () => (
-  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    <path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3zM7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3"/>
+const LikeIcon = ({ isLiked }: { isLiked?: boolean }) => (
+  <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill={isLiked ? '#0A66C2' : 'none'} stroke={isLiked ? '#0A66C2' : 'currentColor'} strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3zM7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3" />
   </svg>
 );
 
 const CommentIcon = () => (
   <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+    <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
   </svg>
 );
 
 const RepostIcon = () => (
   <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    <path d="M17 1l4 4-4 4"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><path d="M7 23l-4-4 4-4"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/>
+    <path d="M17 1l4 4-4 4" /><path d="M3 11V9a4 4 0 0 1 4-4h14" /><path d="M7 23l-4-4 4-4" /><path d="M21 13v2a4 4 0 0 1-4 4H3" />
   </svg>
 );
 
 const SendIcon = () => (
   <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-    <line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"/>
+    <line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2" />
   </svg>
 );
 const CloseIcon = () => (
   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" width="18" height="18">
-    <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/>
+    <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z" />
   </svg>
 );
 // --- UI COMPONENTS ---
@@ -233,6 +287,7 @@ function Header() {
   const [isSearchOpen, setIsSearchOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState<any[]>([]);
+  const [showMessagePopup, setShowMessagePopup] = useState(false);
 
   const handleSearchClick = () => {
     setIsSearchOpen(true);
@@ -242,6 +297,10 @@ function Header() {
     setIsSearchOpen(false);
     setSearchQuery('');
     setSearchResults([]);
+  };
+
+  const toggleMessagePopup = () => {
+    setShowMessagePopup(!showMessagePopup);
   };
 
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -268,13 +327,13 @@ function Header() {
       <header className="header">
         {!isSearchOpen ? (
           <>
-            <img src={userProfile.avatarUrl} alt="Allen's avatar" className="header-avatar" width={32} height={32} />
+            <img src={userProfile.avatarUrl} alt="Allen's avatar" className="header-avatar" width={32} height={32} loading="lazy"/>
             <div className="search-bar" role="search" tabIndex={0} onClick={handleSearchClick}>
               <SearchIcon />
               <span>Search</span>
             </div>
-            
-            <div className="message-icon" aria-label="Messages">
+
+            <div className="message-icon" onClick={toggleMessagePopup} aria-label="Messages">
               <MessageIcon />
             </div>
           </>
@@ -321,6 +380,7 @@ function Header() {
           </div>
         )}
       </header>
+      {showMessagePopup && <MessagePopup onClose={toggleMessagePopup} />}
       <style jsx>{`
         .header {
           position: fixed;
@@ -339,6 +399,7 @@ function Header() {
           width: 32px;
           height: 32px;
           border-radius: 50%;
+          
         }
         .search-bar {
           flex-grow: 1;
@@ -358,6 +419,12 @@ function Header() {
         }
         .message-icon {
           color: #606060;
+        }
+        .message-icon:hover {
+          color: black;
+        }
+        .message-icon:focus {
+          outline: none;
         }
         .search-input-container {
           position: relative;
@@ -433,6 +500,52 @@ function Header() {
   );
 }
 
+function MessagePopup({ onClose }: { onClose: () => void }) {
+  const mockMessages: Message[] = [
+    {
+      id: 1,
+      sender: 'Satya Nadella',
+      avatarUrl: 'https://i.pravatar.cc/150?u=satya',
+      content: 'Hey Allen, interested in discussing a potential collaboration?',
+      timestamp: '03:45 PM +07, June 25, 2025',
+    },
+    {
+      id: 2,
+      sender: 'Sundar Pichai',
+      avatarUrl: 'https://i.pravatar.cc/150?u=sundar',
+      content: 'Great post on React! Let’s catch up soon.',
+      timestamp: '02:30 PM +07, June 25, 2025',
+    },
+    {
+      id: 3,
+      sender: 'Sarah Drasner',
+      avatarUrl: 'https://i.pravatar.cc/150?u=sarah',
+      content: 'Thanks for the follow! Check out my latest article.',
+      timestamp: '10:15 AM +07, June 25, 2025',
+    },
+  ];
+
+  return (
+    <div className="message-popup-overlay" onClick={onClose}>
+      <div className="message-popup" onClick={(e) => e.stopPropagation()}>
+        <h4>Messages</h4>
+        <div className="message-list">
+          {mockMessages.map((message) => (
+            <div key={message.id} className="message-item">
+              <img src={message.avatarUrl} alt={message.sender} className="message-avatar" width={32} height={32} loading="lazy"/>
+              <div className="message-content">
+                <p className="message-sender"><strong>{message.sender}</strong></p>
+                <p className="message-text">{message.content}</p>
+                <p className="message-timestamp">{message.timestamp}</p>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function BottomNavBar({ setActiveTab }: { setActiveTab: (tab: string) => void }) {
   const [activeTab, setLocalActiveTab] = useState('Home');
   const navItems = [
@@ -505,7 +618,7 @@ function ProfileSummaryCard() {
   return (
     <div className="card">
       <div className="profile-summary">
-        <img src={userProfile.avatarUrl} alt="Allen's avatar" className="profile-avatar" width={72} height={72} />
+        <img src={userProfile.avatarUrl} alt="Allen's avatar" className="profile-avatar" width={72} height={72} loading="lazy"/>
         <h3>{userProfile.name}</h3>
         <p className="headline">{userProfile.headline}</p>
       </div>
@@ -535,6 +648,7 @@ function PeopleYouMayKnow() {
   const [people, setPeople] = useState<Person[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [following, setFollowing] = useState<Set<number>>(new Set());
 
   useEffect(() => {
     const loadData = async () => {
@@ -550,6 +664,18 @@ function PeopleYouMayKnow() {
     loadData();
   }, []);
 
+  const handleFollowToggle = (id: number) => {
+    setFollowing(prev => {
+      const newFollowing = new Set(prev);
+      if (newFollowing.has(id)) {
+        newFollowing.delete(id);
+      } else {
+        newFollowing.add(id);
+      }
+      return newFollowing;
+    });
+  };
+
   if (error) return <p className="error-text">{error}</p>;
   if (loading) return <p className="loading-text">Loading recommendations...</p>;
 
@@ -559,11 +685,11 @@ function PeopleYouMayKnow() {
       <div className="swipeable-container">
         {people.map((person) => (
           <div key={person.id} className="person-card">
-            <img src={person.avatarUrl} alt={person.name} className="person-avatar" width={56} height={56} />
+            <img src={person.avatarUrl} alt={person.name} className="person-avatar" width={56} height={56} loading="lazy"/>
             <p className="person-name">{person.name}</p>
             <p className="person-headline">{person.headline}</p>
-            <button className="connect-button" aria-label={`Connect with ${person.name}`}>
-              Connect
+            <button className={`follow-button ${following.has(person.id) ? 'following' : ''}`} onClick={() => handleFollowToggle(person.id)} aria-label={`Follow ${person.name}`}>
+              {following.has(person.id) ? 'Following' : 'Follow'}
             </button>
           </div>
         ))}
@@ -576,6 +702,7 @@ function MyNetwork() {
   const [connections, setConnections] = useState<Person[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [following, setFollowing] = useState<Set<number>>(new Set());
 
   useEffect(() => {
     const loadData = async () => {
@@ -591,6 +718,18 @@ function MyNetwork() {
     loadData();
   }, []);
 
+  const handleFollowToggle = (id: number) => {
+    setFollowing(prev => {
+      const newFollowing = new Set(prev);
+      if (newFollowing.has(id)) {
+        newFollowing.delete(id);
+      } else {
+        newFollowing.add(id);
+      }
+      return newFollowing;
+    });
+  };
+
   if (error) return <p className="error-text">{error}</p>;
   if (loading) return <p className="loading-text">Loading connections...</p>;
 
@@ -600,13 +739,13 @@ function MyNetwork() {
       <div className="connections-container">
         {connections.map((connection) => (
           <div key={connection.id} className="connection-card">
-            <img src={connection.avatarUrl} alt={connection.name} className="connection-avatar" width={48} height={48} />
+            <img src={connection.avatarUrl} alt={connection.name} className="connection-avatar" width={48} height={48} loading="lazy"/>
             <div className="connection-info">
               <p className="connection-name">{connection.name}</p>
               <p className="connection-headline">{connection.headline}</p>
             </div>
-            <button className="message-button" aria-label={`Message ${connection.name}`}>
-              Message
+            <button className={`follow-button ${following.has(connection.id) ? 'following' : ''}`} onClick={() => handleFollowToggle(connection.id)} aria-label={`Follow ${connection.name}`}>
+              {following.has(connection.id) ? 'Following' : 'Follow'}
             </button>
           </div>
         ))}
@@ -618,6 +757,7 @@ function MyNetwork() {
 function PostCreation({ onPostCreated }: { onPostCreated: (post: Post) => void }) {
   const [content, setContent] = useState('');
   const [image, setImage] = useState<string | null>(null);
+  const [showEditor, setShowEditor] = useState(false);
 
   const handlePost = () => {
     if (!content.trim()) return;
@@ -631,10 +771,12 @@ function PostCreation({ onPostCreated }: { onPostCreated: (post: Post) => void }
       comments: 0,
       reposts: 0,
       sends: 0,
+      initialComments: [],
     };
     onPostCreated(newPost);
     setContent('');
     setImage(null);
+    setShowEditor(false);
   };
 
   const handleImageUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -646,29 +788,35 @@ function PostCreation({ onPostCreated }: { onPostCreated: (post: Post) => void }
 
   return (
     <div className="card post-creation-container">
-      <img src={userProfile.avatarUrl} alt="avatar" className="post-creation-avatar" width={48} height={48} />
-      <textarea
-        className="post-creation-input"
-        placeholder="Start a post"
-        value={content}
-        onChange={(e) => setContent(e.target.value)}
-        aria-label="Create a new post"
-      />
-      <div className="post-creation-actions">
-        <label className="image-upload-button" aria-label="Upload image">
-          <input type="file" accept="image/*" onChange={handleImageUpload} hidden />
-          📷
-        </label>
-        <button
-          className="post-button"
-          onClick={handlePost}
-          disabled={!content.trim()}
-          aria-label="Submit post"
-        >
-          Post
-        </button>
-      </div>
-      {image && <img src={image} alt="Uploaded preview" className="post-preview-image" width={100} height={100} />}
+    {showEditor ? (
+        <>
+          <div className="post-creation-row">
+            <img src={userProfile.avatarUrl} alt="avatar" className="post-creation-avatar" width={48} height={48} loading="lazy"/>
+            <textarea
+              className="post-creation-input"
+              placeholder="Start a post"
+              value={content}
+              onChange={(e) => setContent(e.target.value)}
+            />
+          </div>
+          <div className="post-creation-actions">
+            <button className="action-btn video"><span>▶️</span> Video</button>
+            <button className="action-btn photo"><span>🖼️</span> Photo</button>
+            <button className="action-btn article" onClick={handlePost} disabled={!content.trim()} aria-label="Submit post"><span>📝</span> Post</button>
+          </div>
+        </>
+      ) : (
+        <div className="post-creation-row">
+          <img src={userProfile.avatarUrl} alt="avatar" className="post-creation-avatar" width={48} height={48} loading="lazy"/>
+          <button
+            className="post-creation-input"
+            onClick={() => setShowEditor(true)}
+            aria-label="Start a post"
+          >
+            Start a post
+          </button>
+        </div>
+      )}
     </div>
   );
 }
@@ -766,7 +914,7 @@ function Jobs() {
       <div className="jobs-container">
         {filteredJobs.map((job) => (
           <div key={job.id} className="job-card">
-            <img src={job.logoUrl} alt={`${job.company} logo`} className="job-logo" width={48} height={48} />
+            <img src={job.logoUrl} alt={`${job.company} logo`} className="job-logo" width={48} height={48} loading="lazy"/>
             <div className="job-info">
               <p className="job-title">{job.title}</p>
               <p className="job-company">{job.company} • {job.location}</p>
@@ -783,7 +931,66 @@ function Jobs() {
   );
 }
 
-function FeedPost({ post }: { post: Post }) {
+function SendModal({ post, following, onClose, onSend }: { post: Post; following: Set<number>; onClose: () => void; onSend: (recipients: Person[]) => void }) {
+  const [searchQuery, setSearchQuery] = useState('');
+  const [selectedRecipients, setSelectedRecipients] = useState<Set<number>>(new Set());
+
+  const filteredPeople = peopleYouMayKnowData.filter(person =>
+    person.name.toLowerCase().includes(searchQuery.toLowerCase()) || person.headline.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
+  const handleSend = () => {
+    const recipients = peopleYouMayKnowData.filter(person => selectedRecipients.has(person.id));
+    onSend(recipients);
+    onClose();
+  };
+
+  return (
+    <div className="send-modal-overlay" onClick={onClose}>
+      <div className="send-modal" onClick={(e) => e.stopPropagation()}>
+        <h4>Send to</h4>
+        <input
+          type="text"
+          className="send-search-input"
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          placeholder="Search followers..."
+          aria-label="Search followers"
+        />
+        <div className="send-recipients-list">
+          {filteredPeople.map((person) => (
+            <div key={person.id} className="send-recipient-item">
+              <label>
+                <img src={person.avatarUrl} alt={person.name} className="send-recipient-avatar" width={32} height={32} loading="lazy"/>
+                <span className="send-recipient-name">{person.name}</span>
+                <span className="send-recipient-headline">{person.headline}</span>
+              </label>
+              <input
+                type="checkbox"
+                checked={selectedRecipients.has(person.id)}
+                onChange={(e) => {
+                  const newSelected = new Set(selectedRecipients);
+                  if (e.target.checked) {
+                    newSelected.add(person.id);
+                  } else {
+                    newSelected.delete(person.id);
+                  }
+                  setSelectedRecipients(newSelected);
+                }}
+                aria-label={`Select ${person.name} to send`}
+              />
+            </div>
+          ))}
+        </div>
+        <button className="send-submit-button" onClick={handleSend} disabled={selectedRecipients.size === 0} aria-label="Send post">
+          Send
+        </button>
+      </div>
+    </div>
+  );
+}
+
+function FeedPost({ post, onRepost }: { post: Post; onRepost: (post: Post) => void }) {
   const [likes, setLikes] = useState(post.likes);
   const [comments, setComments] = useState(post.comments);
   const [reposts, setReposts] = useState(post.reposts);
@@ -791,35 +998,73 @@ function FeedPost({ post }: { post: Post }) {
   const [showComments, setShowComments] = useState(false);
   const [newComment, setNewComment] = useState('');
   const [postComments, setPostComments] = useState(post.initialComments || []);
+  const [showSendModal, setShowSendModal] = useState(false);
+  const [isLiked, setIsLiked] = useState(false);
+  const [following, setFollowing] = useState<Set<number>>(new Set());
 
-  const ActionButton = ({ icon, count, onClick, label }: { icon: React.ReactNode; count: number; onClick: () => void; label: string }) => (
-    <button className="action-button" onClick={onClick} aria-label={`${label} (${count})`}>
-      <div className="action-content">
-        {icon}
-      </div>
+  const ActionButton = ({
+    icon,
+    count,
+    onClick,
+    label,
+    active = false,
+  }: {
+    icon: React.ReactNode;
+    count?: number;
+    onClick: () => void;
+    label: string;
+    active?: boolean;
+  }) => (
+    <button
+      className={`action-button${active ? ' active' : ''}`}
+      onClick={onClick}
+      aria-label={`${label}${count !== undefined ? ` (${count})` : ''}`}
+    >
+      <div className="action-content">{icon}</div>
       <span className="action-label">{label}</span>
-      {/* <span className="action-count">{count}</span> */}
+      
     </button>
   );
 
+  const toggleLike = () => {
+    if (isLiked) {
+      setLikes(likes - 1);
+      setIsLiked(false);
+    } else {
+      setLikes(likes + 1);
+      setIsLiked(true);
+    }
+  };
+
+  const handleRepost = () => {
+    setReposts(reposts + 1);
+    onRepost(post);
+  };
+
   const addComment = () => {
-  if (newComment.trim()) {
-    const comment: Comment = {
-      id: Date.now(),
-      author: userProfile.name,
-      content: newComment,
-      timestamp: 'Just now',
-    };
-    setPostComments([...postComments, comment]);
-    setComments(comments + 1);
-    setNewComment('');
-  }
+    if (newComment.trim()) {
+      const comment: Comment = {
+        id: Date.now(),
+        author: userProfile.name,
+        content: newComment,
+        timestamp: 'Just now',
+        avatarUrl: 'https://i.pravatar.cc/150?u=allen',
+      };
+      setPostComments([...postComments, comment]);
+      setComments(comments + 1);
+      setNewComment('');
+    }
+  };
+
+  const handleSend = (recipients: Person[]) => {
+    setSends(sends + recipients.length);
+    console.log(`Sent to: ${recipients.map(r => r.name).join(', ')}`);
   };
 
   return (
     <div className="card feed-post">
       <div className="post-header">
-        <img src={post.author.avatarUrl} alt={post.author.name} className="author-avatar" width={48} height={48} />
+        <img src={post.author.avatarUrl} alt={post.author.name} className="author-avatar" width={48} height={48} loading="lazy"/>
         <div className="author-info">
           <p className="author-name">{post.author.name}</p>
           <p className="post-timestamp">{post.timestamp}</p>
@@ -833,22 +1078,39 @@ function FeedPost({ post }: { post: Post }) {
       </div>
       <div className="post-stats">
         <span>{likes} Likes</span>
-        <span>{comments} Comments • {reposts} Reposts</span>
+        <div>
+          <span
+            className="comments-count"
+            onClick={() => setShowComments(!showComments)}
+            tabIndex={0}
+            role="button"
+            aria-label="Show comments"
+          >{comments} Comments</span> • <span>{reposts} Reposts</span>
+        </div>
       </div>
       <div className="post-actions-bar">
-        <ActionButton icon={<LikeIcon />} onClick={() => setLikes(likes + 1)} label="Like" />
+        <ActionButton icon={<LikeIcon isLiked={isLiked} />} onClick={toggleLike} label="Like" />
         <ActionButton icon={<CommentIcon />} onClick={() => setShowComments(!showComments)} label="Comment" />
-        <ActionButton icon={<RepostIcon />} onClick={() => setReposts(reposts + 1)} label="Repost" />
-        <ActionButton icon={<SendIcon />} onClick={() => setSends(sends + 1)} label="Send" />
+        <ActionButton icon={<RepostIcon />} onClick={handleRepost} label="Repost" />
+        <ActionButton icon={<SendIcon />} count={sends} onClick={() => setShowSendModal(true)} label="Send" />
       </div>
       {showComments && (
         <div className="comments-section">
           <div className="comments-list">
             {postComments.map((comment) => (
               <div key={comment.id} className="comment-item">
-                <p className="comment-author"><strong>{comment.author}</strong></p>
-                <p className="comment-content">{comment.content}</p>
-                <p className="comment-timestamp">{comment.timestamp}</p>
+                <img src={comment.avatarUrl} alt={comment.author} className="comment-avatar" loading="lazy"/>
+                <div className="comment-content-block">
+                  <div className="comment-author-row">
+                    <span className="comment-author">{comment.author}</span>
+                    <span className="comment-timestamp">{comment.timestamp}</span>
+                  </div>
+                  <div className="comment-content">{comment.content}</div>
+                  <div className="comment-actions">
+                    <button className="comment-action-btn">Like</button>
+                    <button className="comment-action-btn">Reply</button>
+                  </div>
+                </div>
               </div>
             ))}
           </div>
@@ -866,6 +1128,14 @@ function FeedPost({ post }: { post: Post }) {
           </div>
         </div>
       )}
+      {showSendModal && (
+        <SendModal
+          post={post}
+          following={following}
+          onClose={() => setShowSendModal(false)}
+          onSend={handleSend}
+        />
+      )}
     </div>
   );
 }
@@ -880,6 +1150,22 @@ export default function LinkedInClonePage() {
     setPosts([newPost, ...posts]);
   };
 
+  const handleRepost = (originalPost: Post) => {
+    const repost: Post = {
+      id: Date.now(),
+      author: { name: userProfile.name, avatarUrl: userProfile.avatarUrl },
+      timestamp: 'Just now',
+      content: `Reposted: ${originalPost.content}`,
+      media: originalPost.media,
+      likes: 0,
+      comments: 0,
+      reposts: 0,
+      sends: 0,
+      initialComments: [],
+    };
+    setPosts([repost, ...posts]);
+  };
+
   const renderContent = () => {
     switch (activeTab) {
       case 'Home':
@@ -889,7 +1175,8 @@ export default function LinkedInClonePage() {
             <PeopleYouMayKnow />
             <PostCreation onPostCreated={handlePostCreated} />
             <hr className="divider" />
-            {posts.map((post) => <FeedPost key={post.id} post={post} />)}
+            {posts.map((post) => <FeedPost key={post.id} post={post} onRepost={handleRepost} />)}
+
           </>
         );
       case 'My Network':
@@ -947,7 +1234,7 @@ const GlobalStyles = () => (
       position: relative;
     }
     .main-content {
-      padding: 72px 0 76px 0;
+      padding: 55px 0 76px 0;
       display: flex;
       flex-direction: column;
       gap: 8px;
@@ -985,6 +1272,8 @@ const GlobalStyles = () => (
       height: 72px;
       border-radius: 50%;
       margin-bottom: 8px;
+      margin: 0 auto;
+      
     }
     .profile-summary h3 {
       margin: 0 0 4px 0;
@@ -1061,6 +1350,8 @@ const GlobalStyles = () => (
       width: 56px;
       height: 56px;
       border-radius: 50%;
+      display: block;
+      margin: 0 auto;
     }
     .person-name {
       font-weight: 600;
@@ -1068,13 +1359,14 @@ const GlobalStyles = () => (
       margin: 8px 0 4px 0;
     }
     .person-headline {
+
       font-size: 12px;
       color: var(--text-color-secondary);
       height: 3em;
       overflow: hidden;
       text-overflow: ellipsis;
     }
-    .connect-button {
+    .follow-button {
       margin-top: 12px;
       padding: 6px 16px;
       border-radius: 16px;
@@ -1084,7 +1376,12 @@ const GlobalStyles = () => (
       font-weight: 600;
       cursor: pointer;
     }
-    .connect-button:hover {
+    .follow-button.following {
+      color: var(--gray-text);
+      background-color: var(--gray-background);
+      border-color: var(--gray-background);
+    }
+    .follow-button:hover:not(.following) {
       background-color: #eef3f8;
     }
 
@@ -1136,58 +1433,69 @@ const GlobalStyles = () => (
     .post-creation-container {
       display: flex;
       flex-direction: column;
-      padding: 12px 16px;
-      background-color: white;
+
+      padding: 16px;
+      background: white;
+      border-radius: 12px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+      margin-bottom: 16px;
+    }
+    .post-creation-row {
+      display: flex;
+      align-items: center;
+      gap: 12px;
     }
     .post-creation-avatar {
       width: 48px;
       height: 48px;
       border-radius: 50%;
-      margin-bottom: 12px;
+      object-fit: cover;
     }
     .post-creation-input {
-      flex-grow: 1;
+      flex: 1;
+      background: #f3f2ef;
       border: 1px solid #ccc;
-      border-radius: 8px;
-      padding: 12px 16px;
-      color: var(--text-color-secondary);
-      min-height: 80px;
-      resize: vertical;
-      width: 100%;
-    }
-    .post-creation-input:hover, .post-creation-input:focus {
-      background-color: #f0f0f0;
+      border-radius: 999px;
+      padding: 14px 20px;
+      font-size: 18px;
+      color: #666;
+      text-align: left;
+      cursor: pointer;
       outline: none;
+      transition: border 0.2s;
+      border: 1.5px solid #e0e0e0;
     }
+    .post-creation-input:focus,
+    .post-creation-input:hover {
+      border: 1.5px solid #0A66C2;
+      background: #fff;
+    }
+    
     .post-creation-actions {
       display: flex;
-      justify-content: flex-end;
-      gap: 12px;
-      margin-top: 8px;
+      justify-content: space-between;
+      margin-top: 16px;
+      gap: 8px;
     }
-    .image-upload-button {
-      cursor: pointer;
-      font-size: 20px;
-    }
-    .post-button {
-      padding: 6px 16px;
-      border-radius: 16px;
-      border: 1px solid var(--primary-blue);
-      color: var(--primary-blue);
-      background-color: transparent;
+    .action-btn {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: none;
+      border: none;
+      color: #666;
       font-weight: 600;
+      font-size: 16px;
       cursor: pointer;
-    }
-    .post-button:disabled {
-      opacity: 0.5;
-      cursor: not-allowed;
-    }
-    .post-button:hover:not(:disabled) {
-      background-color: #eef3f8;
-    }
-    .post-preview-image {
-      margin-top: 8px;
+      padding: 8px 12px;
       border-radius: 8px;
+      transition: background 0.2s;
+    }
+    .action-btn.video span { color: #37833b; }
+    .action-btn.photo span { color: #0a66c2; }
+    .action-btn.article span { color: #b24020; }
+    .action-btn:hover {
+      background: #f3f2ef;
     }
 
     /* Notifications Styles */
@@ -1382,6 +1690,283 @@ const GlobalStyles = () => (
       font-size: 12px;
       color: #606060;
       margin-top: 2px;
+    }
+
+  /* SendModal Styles */
+    .send-modal-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background-color: rgba(0, 0, 0, 0.5);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      z-index: 1000;
+    }
+    .send-modal {
+      background-color: var(--card-background);
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      padding: 16px;
+      width: 90%;
+      max-width: 400px;
+      max-height: 80vh;
+      overflow-y: auto;
+      position: relative;
+    }
+    .send-search-input {
+      width: 100%;
+      padding: 8px;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+      margin-bottom: 12px;
+      font-size: 14px;
+    }
+    .send-recipients-list {
+      max-height: 50vh;
+      overflow-y: auto;
+    }
+    .send-recipient-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 8px 0;
+      border-bottom: 1px solid var(--border-color);
+    }
+    .send-recipient-item:last-child {
+      border-bottom: none;
+    }
+    .send-recipient-item input[type="checkbox"] {
+      margin-right: 8px;
+    }
+    .send-recipient-avatar {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      margin-right: 8px;
+    }
+    .send-recipient-name {
+      font-weight: 600;
+      margin-right: 8px;
+    }
+    .send-recipient-headline {
+      color: var(--text-color-secondary);
+      font-size: 12px;
+    }
+    .send-submit-button {
+      width: 100%;
+      padding: 8px;
+      border-radius: 4px;
+      border: none;
+      background-color: var(--primary-blue);
+      color: white;
+      font-weight: 600;
+      cursor: pointer;
+      margin-top: 12px;
+    }
+    .send-submit-button:disabled {
+      background-color: #ccc;
+      cursor: not-allowed;
+    }
+    .send-submit-button:hover:not(:disabled) {
+      background-color: #005bb5;
+    }
+    
+    .action-button.active,
+    .action-button.active .action-label {
+      color: #0A66C2;
+    }
+    .action-button.active svg {
+      stroke: #0A66C2;
+      fill: #0A66C2;
+    }
+    .post-stats span {
+      cursor: pointer;
+      transition: color 0.2s, text-decoration 0.2s;
+    }
+    .post-stats span:hover {
+      color: #0A66C2;
+      text-decoration: underline;
+    }
+    .comments-count {
+      cursor: pointer;
+      margin: 0 8px;
+    }
+    .comments-count:focus {
+      outline: 2px solid #0A66C2;
+    }
+    .comments-section {
+      margin-top: 8px;
+      background: #fff;
+      border-radius: 0 0 12px 12px;
+      padding: 0 0 8px 0;
+    }
+    .comments-list {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      margin-top: 8px;
+    }
+    .comment-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+      padding: 0 16px;
+    }
+    .comment-avatar {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      object-fit: cover;
+      margin-top: 2px;
+    }
+    .comment-content-block {
+      flex: 1;
+      background: #f3f2ef;
+      border-radius: 12px;
+      padding: 10px 16px;
+      position: relative;
+    }
+    .comment-author-row {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .comment-author {
+      font-weight: 600;
+      color: #222;
+      margin: 0;
+      font-size: 15px;
+    }
+    .comment-timestamp {
+      color: #888;
+      font-size: 13px;
+      margin-left: 4px;
+    }
+    .comment-content {
+      margin: 4px 0 0 0;
+      font-size: 15px;
+      color: #222;
+      line-height: 1.5;
+      word-break: break-word;
+    }
+    .comment-actions {
+      display: flex;
+      gap: 16px;
+      margin-top: 4px;
+    }
+    .comment-action-btn {
+      background: none;
+      border: none;
+      color: #666;
+      font-size: 14px;
+      cursor: pointer;
+      padding: 0;
+      transition: color 0.2s;
+    }
+    .comment-action-btn:hover {
+      color: #0A66C2;
+      text-decoration: underline;
+    }
+    .comment-input-container {
+      display: flex;
+      align-items: flex-start;
+      gap: 8px;
+      padding: 12px 16px 0 16px;
+    }
+    .comment-input {
+      flex: 1;
+      border: 1px solid #e0e0e0;
+      border-radius: 24px;
+      padding: 10px 16px;
+      font-size: 15px;
+      resize: none;
+      background: #f3f2ef;
+      color: #222;
+      outline: none;
+      transition: border 0.2s;
+    }
+    .comment-input:focus {
+      border: 1.5px solid #0A66C2;
+      background: #fff;
+    }
+    .comment-submit-button {
+      background: #0A66C2;
+      color: #fff;
+      border: none;
+      border-radius: 24px;
+      padding: 8px 18px;
+      font-size: 15px;
+      font-weight: 600;
+      cursor: pointer;
+      margin-left: 4px;
+      transition: background 0.2s;
+    }
+    .comment-submit-button:disabled {
+      background: #b3d3ea;
+      cursor: not-allowed;
+    }
+  
+    /* MessagePopup Styles */
+    .message-popup-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background-color: rgba(0, 0, 0, 0.5);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      z-index: 1000;
+    }
+    .message-popup {
+      background-color: var(--card-background);
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      padding: 16px;
+      width: 90%;
+      max-width: 400px;
+      max-height: 80vh;
+      overflow-y: auto;
+      position: relative;
+    }
+    .message-list {
+      max-height: 60vh;
+      overflow-y: auto;
+    }
+    .message-item {
+      display: flex;
+      align-items: flex-start;
+      padding: 8px 0;
+      border-bottom: 1px solid var(--border-color);
+    }
+    .message-item:last-child {
+      border-bottom: none;
+    }
+    .message-avatar {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      margin-right: 8px;
+    }
+    .message-content {
+      flex-grow: 1;
+    }
+    .message-sender {
+      margin: 0 0 4px 0;
+      font-weight: 600;
+    }
+    .message-text {
+      margin: 0 0 4px 0;
+      color: var(--text-color);
+    }
+    .message-timestamp {
+      font-size: 12px;
+      color: var(--text-color-secondary);
+      margin: 0;
     }
   `}</style>
 );
